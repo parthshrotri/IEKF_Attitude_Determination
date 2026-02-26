@@ -1,0 +1,24 @@
+input_files:
+  spice_dir: inputs/kernels/
+  base_spice_kernels:
+    - de440.bsp
+    - naif0012.tls
+  vehicle_config: default/vehicle.yaml
+  fsw_config: default/FSW/fsw.yaml
+
+output_files:
+  dir: "outputs/trial1/"
+    
+simulation:
+  start_time: "2005-08-13T00:00:00.000"
+  duration: 60  # in seconds
+  time_step: 10  # in milliseconds
+
+  init_states:
+    att_states: [0, 0, 0, 1]  # Quaternion (x, y, z, w)
+    att_rates: [0, 0, 0]  # Angular velocity in rad/s
+
+  cmds:
+    - time: 0  # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "Q(0,0,0,1)"  # Desired target attitude in quaternion form

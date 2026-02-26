@@ -1,0 +1,33 @@
+input_files:
+  spice_dir: inputs/kernels/
+  base_spice_kernels:
+    - de440.bsp
+    - naif0012.tls
+  vehicle_config: init_filter_bad/vehicle.yaml
+  fsw_config: init_filter_bad/FSW/fsw.yaml
+
+output_files:
+  dir: "outputs/trial5/"
+    
+simulation:
+  start_time: "2005-08-13T00:00:00.000"
+  duration: 120  # in seconds
+  time_step: 10  # in milliseconds
+
+  init_states:
+    att_states: [0, 0, 0, 1]  # Quaternion (x, y, z, w)
+    att_rates: [0, 3.0, 0]  # Angular velocity in rad/s
+
+  cmds:
+    - time: 60  # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "RATE(0,3.0,0)"  # Desired target
+    - time: 70  # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "OFF"  
+    - time: 80 # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "TORQUE(100.0, 0.0, 0.0)"  # Torque in Nm
+    - time: 81 # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "AUTO_TORQUE"  # Switch back to automatic torque calculation

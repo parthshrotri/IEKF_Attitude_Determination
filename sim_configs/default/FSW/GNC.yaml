@@ -1,0 +1,20 @@
+att_controller:
+  KP: [400, 360, 480]
+  KD: [4000, 3600, 4800]
+
+MEKF:
+  init_est: "AUTO" # Init filter from singular camera measurement
+  gyro_noise_sigma: 0.01
+  gyro_bias_rate_sigma: 0.01
+  star_los_sigma: 1e-4
+
+LIEKF:
+  init_est: "AUTO" # Init filter from singular camera measurement
+  gyro_noise_sigma: 0.01
+  gyro_bias_rate_sigma: 0.01
+  star_los_sigma: 1e-4
+
+star_catalog:
+  epoch: "J2000"
+  loc: inputs/catalog/hip.csv
+  vmag_max: 6.5
