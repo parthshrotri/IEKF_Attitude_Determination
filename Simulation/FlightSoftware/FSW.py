@@ -20,7 +20,7 @@ class FSW:
 
     def step(self, time):
         if self.last_update is not None and (time - self.last_update).to(u.s).value <= 1/self.update_rate:
-            return False
+            return 
         self.last_update = time
         self.time = time
         self.parse_commands(time)
@@ -28,7 +28,6 @@ class FSW:
         self.measurement_queue = []  # Clear measurements after processing
         self.parse_commands(time)  # Check for any new commands that may have been added during GNC step
         self.measurement_queue = []
-        return True  # Indicate that an update occurred
 
     def add_to_measurement_queue(self, measurement):
         self.measurement_queue.append(measurement)

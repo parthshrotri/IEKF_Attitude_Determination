@@ -58,38 +58,38 @@ class SimulationLogger:
             target_icrf_to_body = vehicle.icrf_to_body_true
         if target_body_rate is None:
             target_body_rate = vehicle.ang_vel_true
-        self.log("ctrl/target_icrf_to_body", time, target_icrf_to_body.as_array().copy())
-        self.log("ctrl/target_body_rate", time, target_body_rate.copy())
+        self.log("ctrl/target_icrf_to_body", gnc.time, target_icrf_to_body.as_array().copy())
+        self.log("ctrl/target_body_rate", gnc.time, target_body_rate.copy())
 
-        self.log("ctrl/torque", time, gnc.att_controller.get_ctrl_torque().copy())
+        self.log("ctrl/torque", gnc.time, gnc.att_controller.get_ctrl_torque().copy())
         
         if gnc.MEKF.initialized:
-            self.log("est/MEKF/icrf_to_cam", time, gnc.MEKF.inertial_to_cam_est.as_array().copy())
-            self.log("est/MEKF/gyro_bias", time, gnc.MEKF.gyro_bias_est.copy())
+            self.log("est/MEKF/icrf_to_cam", gnc.MEKF.time, gnc.MEKF.inertial_to_cam_est.as_array().copy())
+            self.log("est/MEKF/gyro_bias", gnc.MEKF.time, gnc.MEKF.gyro_bias_est.copy())
 
-            self.log("est/MEKF/icrf_to_cam_error", time, 
+            self.log("est/MEKF/icrf_to_cam_error", gnc.MEKF.time, 
                         vehicle.icrf_to_cam_true.mult(gnc.MEKF.inertial_to_cam_est.conjugate()).as_array().copy())
             
             for sensor in vehicle.sensors:
                 if isinstance(sensor, RateGyro):
-                    self.log("est/MEKF/gyro_bias_error", time, sensor.get_gyro_bias() - gnc.MEKF.gyro_bias_est)
+                    self.log("est/MEKF/gyro_bias_error", gnc.MEKF.time, sensor.get_gyro_bias() - gnc.MEKF.gyro_bias_est)
             
-            self.log("est/MEKF/error_cov_diag", time, np.diag(gnc.MEKF.error_cov).copy())
+            self.log("est/MEKF/error_cov_diag", gnc.MEKF.time, np.diag(gnc.MEKF.error_cov).copy())
 
         if gnc.LIEKF.initialized:
-            self.log("est/LIEKF/icrf_to_cam", time, gnc.LIEKF.inertial_to_cam_est.as_array().copy())
-            self.log("est/LIEKF/gyro_bias", time, gnc.LIEKF.gyro_bias_est.copy())
+            self.log("est/LIEKF/icrf_to_cam", gnc.LIEKF.time, gnc.LIEKF.inertial_to_cam_est.as_array().copy())
+            self.log("est/LIEKF/gyro_bias", gnc.LIEKF.time, gnc.LIEKF.gyro_bias_est.copy())
 
-            self.log("est/LIEKF/icrf_to_cam_error", time, 
+            self.log("est/LIEKF/icrf_to_cam_error", gnc.LIEKF.time, 
                         vehicle.icrf_to_cam_true.mult(gnc.LIEKF.inertial_to_cam_est.conjugate()).as_array().copy())
             for sensor in vehicle.sensors:
                 if isinstance(sensor, RateGyro):
-                    self.log("est/LIEKF/gyro_bias_error", time, sensor.get_gyro_bias() - gnc.LIEKF.gyro_bias_est)
+                    self.log("est/LIEKF/gyro_bias_error", gnc.LIEKF.time, sensor.get_gyro_bias() - gnc.LIEKF.gyro_bias_est)
             
-            self.log("est/LIEKF/error_cov_diag", time, np.diag(gnc.LIEKF.error_cov).copy())
+            self.log("est/LIEKF/error_cov_diag", gnc.LIEKF.time, np.diag(gnc.LIEKF.error_cov).copy())
     
         if gnc.MEKF.initialized and gnc.LIEKF.initialized:
-            self.log("est/MEKF_LIEKF_icrf_to_cam_diff", time, 
+            self.log("est/MEKF_LIEKF_icrf_to_cam_diff", gnc.time, 
                         gnc.MEKF.inertial_to_cam_est.mult(gnc.LIEKF.inertial_to_cam_est.conjugate()).as_array().copy())
 
     def save_history(self):

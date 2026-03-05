@@ -1,0 +1,20 @@
+spacecraft:
+    name: "Spacecraft1"
+    spice_id: -74
+    kernels:
+      - "mro_cruise.bsp"
+    inertial_properties:
+      inertia_tensor: [[15000, 0, 0], 
+                      [0, 10000, 0],
+                      [0, 0, 4000]]  # in kg*m^2
+    rand_disturbance:
+      torque: [0.0, 0.0, 0.0]  # in Nm
+    
+    sensors:
+      cameras:
+        camera0:
+          config: sparse_meas/sensors/camera.yaml
+          q_body_to_cam: [0, 0, 0, 1] # Quaternion (x, y, z, w)
+      rate_gyros:
+        gyro0:
+          config: sparse_meas/sensors/rategyro.yaml

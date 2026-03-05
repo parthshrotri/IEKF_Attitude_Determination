@@ -104,9 +104,8 @@ class Simulator:
             self.fsw.add_to_measurement_queue(meas)
         self.logger.log_measurements(measurements)
 
-        fsw_stepped = self.fsw.step(new_time)
-        if fsw_stepped:
-            self.logger.log_fsw_history(new_time, self.vehicle, self.fsw)
+        self.fsw.step(new_time)
+        self.logger.log_fsw_history(new_time, self.vehicle, self.fsw)
         
         # Log true states        
         self.logger.log_truth(new_time, self.vehicle, self.fsw)

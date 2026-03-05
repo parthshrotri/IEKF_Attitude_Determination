@@ -104,6 +104,8 @@ def plot_error_quaternion_components(time, quat_error_history, title, label_pref
             # Shade each divergence interval
             for start, end in zip(start_idxs, end_idxs):
                 ax[i].axvspan(time[start], time[end-1], color='red', alpha=0.1)
+            y_min, y_max = ax[i].get_ylim()
+            ax[i].set_ylim(max(y_min, -np.pi), min(y_max, np.pi))
         ax[i].legend()
         
     fig.supxlabel("Time (s)")
