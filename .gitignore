@@ -4,3 +4,4 @@ outputs/*
 
 # Ignore Python bytecode directories
 __pycache__/
+*.pyc
