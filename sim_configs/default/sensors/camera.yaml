@@ -16,4 +16,5 @@ catalog:
   vmag_max: 6.5
   planets_to_include: [1, 2, 3, 4, 5, 6]
 
+save_star_field: True
 update_rate: 5  # Hz

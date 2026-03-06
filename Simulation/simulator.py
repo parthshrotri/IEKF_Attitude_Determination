@@ -15,14 +15,17 @@ from Simulation.FlightSoftware.FSW import FSW
 from Simulation.logger import SimulationLogger
 
 class Simulator:
-    def __init__(self, config):
+    def __init__(self, config, MC_run=0):
         # --- Paths ---
         spice_dir = Path(config["input_files"]["spice_dir"])
         output_dir = Path(config["output_files"]["dir"])
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.save_file = Path(output_dir)
+        self.save_file = Path(output_dir) / f"simulation_{MC_run}.npz"
         self.save_file.parent.mkdir(parents=True, exist_ok=True)
+
+        self.is_MC = MC_run > 0
+        self.MC_run = MC_run
 
         # --- Load SPICE kernels ---
         for kernel in config["input_files"]["base_spice_kernels"]:
@@ -64,17 +67,21 @@ class Simulator:
         self.fsw = FSW(t_start, fsw_cfg, self.vehicle)
 
         #--- Initialize Logger ---
-        self.logger = SimulationLogger(t_start, output_dir / "simulation_log.npz")
+        self.logger = SimulationLogger(t_start, self.save_file)
 
     def run(self):
         # --- Run simulation ---
-        print("Running simulation...")
+        if not self.is_MC:
+            print("Running simulation...")
         for i in tqdm.tqdm(range(len(self.t_samples)), desc="Propagating"):
             self.step(i, self.t_samples[i])
 
-        print("Finished Simulation. Saving history...")
+        if not self.is_MC:
+            print("Finished Simulation. Saving history...")
         self.logger.save_history()
-        print(f"Output saved to {self.save_file.parent}")
+
+        if not self.is_MC:
+            print(f"Output saved to {self.save_file.parent}")
     
     def step(self, idx, new_time):
         # Propagate dynamics
@@ -95,7 +102,8 @@ class Simulator:
                 seconds = (dt_ms % (60 * 1000)) / 1000  # keeps milliseconds
 
                 label = f"T+{days:02d}:{hours:02d}:{minutes:02d}:{seconds:06.3f}"
-                print(f"{label} Executing {next_cmd[1]} command: {next_cmd[2]}")
+                if not self.is_MC:
+                    print(f"{label} Executing {next_cmd[1]} command: {next_cmd[2]}")
                 self.fsw.add_to_command_queue(*next_cmd)
             
         # Get sensor measurements and add to FSW queue

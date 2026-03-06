@@ -13,8 +13,8 @@ spacecraft:
     sensors:
       cameras:
         camera0:
-          config: sparse_meas/sensors/camera.yaml
+          config: sparse_meas_LIEKF_break/sensors/camera.yaml
           q_body_to_cam: [0, 0, 0, 1] # Quaternion (x, y, z, w)
       rate_gyros:
         gyro0:
-          config: sparse_meas/sensors/rategyro.yaml
+          config: sparse_meas_LIEKF_break/sensors/rategyro.yaml

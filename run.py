@@ -13,5 +13,12 @@ print(f"Loading configuration from sim_configs/{args.config_file}.yaml...")
 with open(f"sim_configs/{args.config_file}.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-simulation = Simulator(config)
-simulation.run()
+if config.get("MC_runs", 0) > 0:
+    print(f"Running Monte Carlo simulations with {config['MC_runs']} runs...")
+    for i in range(config["MC_runs"]):
+        print(f"--- Monte Carlo Run {i+1}/{config['MC_runs']} ---")
+        simulation = Simulator(config, MC_run=i)
+        simulation.run()
+else:
+    simulation = Simulator(config)
+    simulation.run()

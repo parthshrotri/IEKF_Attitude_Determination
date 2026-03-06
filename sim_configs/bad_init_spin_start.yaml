@@ -7,7 +7,7 @@ input_files:
   fsw_config: init_filter_bad/FSW/fsw.yaml
 
 output_files:
-  dir: "outputs/trial5/"
+  dir: "outputs/bad_init_spin_start/"
     
 simulation:
   start_time: "2005-08-13T00:00:00.000"

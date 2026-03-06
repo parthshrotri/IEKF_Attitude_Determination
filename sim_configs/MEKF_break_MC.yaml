@@ -3,11 +3,13 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  vehicle_config: sparse_meas/vehicle.yaml
-  fsw_config: sparse_meas/FSW/fsw.yaml
+  vehicle_config: sparse_meas_MEKF_break/vehicle.yaml
+  fsw_config: sparse_meas_MEKF_break/FSW/fsw.yaml
 
 output_files:
-  dir: "outputs/trial6/"
+  dir: "outputs/MEKF_break_MC/"
+
+MC_runs: 10
     
 simulation:
   start_time: "2005-08-13T00:00:00.000"

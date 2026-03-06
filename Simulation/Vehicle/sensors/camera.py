@@ -39,6 +39,7 @@ class Camera:
         self.last_update    = init_time  # time of last update
 
         self.star_catalog   = utils.StarCatalog(cam_cfg["catalog"]["loc"], cam_cfg["catalog"]["epoch"], self.vmag_lim)
+        self.save_star_field = cam_cfg["save_star_field"]
 
         self.save_file      = save_file
 
@@ -143,7 +144,8 @@ class Camera:
         planet_ids, planet_pixs, planet_los = self.get_planets(pos_true_icrf, icrf_to_cam_true, t_now)
         self.last_update = t_now
 
-        self.plot_star_field(star_ids, star_pixs, planet_ids, planet_pixs, t_now)
+        if self.save_star_field:
+            self.plot_star_field(star_ids, star_pixs, planet_ids, planet_pixs, t_now)
 
         stars = [star_ids, star_los]
         planets = [planet_ids, planet_los]

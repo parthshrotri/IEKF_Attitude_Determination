@@ -133,3 +133,28 @@ def plot_quaternion_components(time, quat_history, title, label_prefix, fig_path
     fig.savefig(fig_path.with_suffix('.png'))
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
     plt.close()  # Close the figure to free up memory, since we'll load it again when we want to show it
+
+def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
+    colors = ['m', 'g', 'b']
+    fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
+
+    num_runs = len(run_data)
+
+    for run in run_data:
+        time_arrays = run["time_arrays"]
+        data_arrays = run["data_arrays"]
+        cov_diag_arrays = run["cov_diag_arrays"]
+        for i in range(3):
+            ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=0.02)
+            ax[i].plot(time_arrays, data_arrays[:,i], color=colors[i], alpha=0.3)
+
+    ax[0].set_ylabel(ylabels[0])
+    ax[1].set_ylabel(ylabels[1])
+    ax[2].set_ylabel(ylabels[2])
+
+    ax[2].set_xlabel("Time (s)")
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(fig_path.with_suffix('.png'))
+    pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
+    plt.close()

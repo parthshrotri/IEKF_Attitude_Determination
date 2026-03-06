@@ -1,0 +1,33 @@
+input_files:
+  spice_dir: inputs/kernels/
+  base_spice_kernels:
+    - de440.bsp
+    - naif0012.tls
+  vehicle_config: sparse_meas_LIEKF_break/vehicle.yaml
+  fsw_config: sparse_meas_LIEKF_break/FSW/fsw.yaml
+
+output_files:
+  dir: "outputs/LIEKF_break/"
+    
+simulation:
+  start_time: "2005-08-13T00:00:00.000"
+  duration: 120  # in seconds
+  time_step: 10  # in milliseconds
+
+  init_states:
+    att_states: [0, 0, 0, 1]  # Quaternion (x, y, z, w)
+    att_rates: [0, 1.0, 0]  # Angular velocity in rad/s
+
+  cmds:
+    - time: 0  # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "RATE(0,1.0,0)"
+    - time: 9 # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "OFF"  # Switch off attitude control
+    - time: 10  # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "TORQUE(100.0, 0.0, 0.0)"  # Manually apply a torque to excite unstable mode
+    - time: 11 # in seconds elapsed from start_time
+      type: "GNC_ATT_CMD"
+      cmd: "AUTO_TORQUE"  # Switch back to automatic torque calculation
