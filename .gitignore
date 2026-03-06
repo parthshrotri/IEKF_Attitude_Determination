@@ -1,2 +1,6 @@
+# Ignore input and output directories
 inputs/*
 outputs/*
+
+# Ignore Python bytecode directories
+__pycache__/
