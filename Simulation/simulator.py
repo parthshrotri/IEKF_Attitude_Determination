@@ -15,17 +15,21 @@ from Simulation.FlightSoftware.FSW import FSW
 from Simulation.logger import SimulationLogger
 
 class Simulator:
-    def __init__(self, config, MC_run=0):
+    def __init__(self, config, MC_run=None):
         # --- Paths ---
         spice_dir = Path(config["input_files"]["spice_dir"])
         output_dir = Path(config["output_files"]["dir"])
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.save_file = Path(output_dir) / f"simulation_{MC_run}.npz"
-        self.save_file.parent.mkdir(parents=True, exist_ok=True)
+        if MC_run is not None:
+            self.run_num = MC_run
+            self.is_MC = True
+        else:            
+            self.run_num = 0
+            self.is_MC = False
 
-        self.is_MC = MC_run > 0
-        self.MC_run = MC_run
+        self.save_file = Path(output_dir) / f"simulation_{self.run_num}.npz"
+        self.save_file.parent.mkdir(parents=True, exist_ok=True)
 
         # --- Load SPICE kernels ---
         for kernel in config["input_files"]["base_spice_kernels"]:
@@ -73,8 +77,13 @@ class Simulator:
         # --- Run simulation ---
         if not self.is_MC:
             print("Running simulation...")
-        for i in tqdm.tqdm(range(len(self.t_samples)), desc="Propagating"):
-            self.step(i, self.t_samples[i])
+        
+        if not self.is_MC:
+            for i in tqdm.tqdm(range(len(self.t_samples)), desc="Propagating"):
+                self.step(i, self.t_samples[i])
+        else:
+            for i in range(len(self.t_samples)):
+                self.step(i, self.t_samples[i])
 
         if not self.is_MC:
             print("Finished Simulation. Saving history...")

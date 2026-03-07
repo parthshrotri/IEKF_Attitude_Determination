@@ -1,5 +1,4 @@
 import glob
-import sys
 import tqdm
 import pickle
 import numpy as np
@@ -140,13 +139,53 @@ def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
 
     num_runs = len(run_data)
 
+    num_x_fails = 0
+    num_y_fails = 0
+    num_z_fails = 0
+
     for run in run_data:
         time_arrays = run["time_arrays"]
         data_arrays = run["data_arrays"]
         cov_diag_arrays = run["cov_diag_arrays"]
         for i in range(3):
-            ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=0.02)
-            ax[i].plot(time_arrays, data_arrays[:,i], color=colors[i], alpha=0.3)
+            # Check when error exceeds 3-sigma
+            error_outside_cov = np.abs(data_arrays[:, i]) > 3*np.sqrt(cov_diag_arrays[:,i])
+            time_error_outside_cov = time_arrays[error_outside_cov]
+
+            # Check if largest contiguous segment of time where error exceeds 3-sigma
+            if len(time_error_outside_cov) > 0:
+                time_diffs = np.diff(time_error_outside_cov)
+                gap_threshold = 0.5  # If time gap between consecutive points is greater than this, consider it a separate segment
+                segment_boundaries = np.where(time_diffs > gap_threshold)[0]
+                segment_starts = np.insert(segment_boundaries + 1, 0, 0)
+                segment_ends = np.append(segment_boundaries, len(time_error_outside_cov) - 1)
+
+                longest_segment_length = 0
+
+                for start, end in zip(segment_starts, segment_ends):
+                    segment_length = time_error_outside_cov[end] - time_error_outside_cov[start]
+                    if segment_length > longest_segment_length:
+                        longest_segment_length = segment_length
+
+                # If error exceeds 3-sigma for more than 5.0 seconds, consider it a divergence (TBR)
+                if longest_segment_length > 5.0:
+                    ax[i].plot(time_arrays, data_arrays[:,i], color='r', alpha=3/(num_runs))
+                    ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
+                    if i == 0:
+                        num_x_fails += 1
+                    elif i == 1:
+                        num_y_fails += 1
+                    else:
+                        num_z_fails += 1
+                else:
+                    ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+            else:
+                ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+
+    x_fail_rate = num_x_fails / num_runs
+    y_fail_rate = num_y_fails / num_runs
+    z_fail_rate = num_z_fails / num_runs
+    ax[0].set_title(f"Failure Rate: X={x_fail_rate:.1%}, Y={y_fail_rate:.1%}, Z={z_fail_rate:.1%}")
 
     ax[0].set_ylabel(ylabels[0])
     ax[1].set_ylabel(ylabels[1])

@@ -1,7 +1,14 @@
-import argparse
+from tqdm import tqdm
 import yaml
+import argparse
+from multiprocessing import Pool
+from multiprocessing import set_start_method
 
 from Simulation.simulator import Simulator
+
+def run_mc(run_index):
+    simulation = Simulator(config, MC_run=run_index)
+    simulation.run()
 
 # --- Parse command-line argument ---
 parser = argparse.ArgumentParser(description="Run spacecraft simulation trial from YAML.")
@@ -9,16 +16,15 @@ parser.add_argument("config_file", type=str, help="Path to the YAML configuratio
 args = parser.parse_args()
 
 # --- Load YAML configuration ---
-print(f"Loading configuration from sim_configs/{args.config_file}.yaml...")
 with open(f"sim_configs/{args.config_file}.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-if config.get("MC_runs", 0) > 0:
-    print(f"Running Monte Carlo simulations with {config['MC_runs']} runs...")
-    for i in range(config["MC_runs"]):
-        print(f"--- Monte Carlo Run {i+1}/{config['MC_runs']} ---")
-        simulation = Simulator(config, MC_run=i)
+if __name__ == "__main__":
+    
+    if config.get("MC_runs", 0) > 0:
+        print(f"Running Monte Carlo simulations with {config['MC_runs']} runs...")
+        with Pool() as pool:
+            list(tqdm(pool.imap_unordered(run_mc, range(config["MC_runs"])), total=config["MC_runs"]))
+    else:
+        simulation = Simulator(config)
         simulation.run()
-else:
-    simulation = Simulator(config)
-    simulation.run()

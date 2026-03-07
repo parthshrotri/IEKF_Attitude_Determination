@@ -7,9 +7,9 @@ input_files:
   fsw_config: sparse_meas_LIEKF_break/FSW/fsw.yaml
 
 output_files:
-  dir: "outputs/LIEKF_break_MC/"
+  dir: "outputs/MC_break_LIEKF/"
 
-MC_runs: 10
+MC_runs: 100
     
 simulation:
   start_time: "2005-08-13T00:00:00.000"

@@ -7,9 +7,9 @@ input_files:
   fsw_config: sparse_meas_MEKF_break/FSW/fsw.yaml
 
 output_files:
-  dir: "outputs/MEKF_break_MC/"
+  dir: "outputs/MC_break_MEKF/"
 
-MC_runs: 10
+MC_runs: 100
     
 simulation:
   start_time: "2005-08-13T00:00:00.000"

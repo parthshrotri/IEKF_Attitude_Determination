@@ -1,0 +1,20 @@
+cam_params:
+  dx: 7310
+  dy: 7310
+  alpha: 0
+  up: 1024
+  vp: 1024
+  nrows: 2048
+  ncols: 2048
+  half_fov: 10
+  bore_cam: [0, 0, 1]
+  sigma_los: 1e-8 # in radians
+
+catalog:
+  epoch: "J2000"
+  loc: inputs/catalog/hip.csv
+  vmag_max: 6.5
+  planets_to_include: [1, 2, 3, 4, 5, 6]
+
+save_star_field: False
+update_rate: 0.5  # Hz
