@@ -170,7 +170,6 @@ def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
                 # If error exceeds 3-sigma for more than 5.0 seconds, consider it a divergence (TBR)
                 if longest_segment_length > 5.0:
                     ax[i].plot(time_arrays, data_arrays[:,i], color='r', alpha=3/(num_runs))
-                    ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
                     if i == 0:
                         num_x_fails += 1
                     elif i == 1:
@@ -179,8 +178,10 @@ def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
                         num_z_fails += 1
                 else:
                     ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+                    ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
             else:
                 ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+                ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
 
     x_fail_rate = num_x_fails / num_runs
     y_fail_rate = num_y_fails / num_runs

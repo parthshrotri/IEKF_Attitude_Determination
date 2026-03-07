@@ -3,7 +3,7 @@ inputs/*
 outputs/*
 
 # Ignore Python bytecode directories
-__pycache__/
+**/__pycache__/
 *.pyc
 
 # Ignore .DS_Store files (macOS)
