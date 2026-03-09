@@ -177,10 +177,10 @@ def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
                     else:
                         num_z_fails += 1
                 else:
-                    ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+                    ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=10/(num_runs))
                     ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
             else:
-                ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=0.5)
+                ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=10/(num_runs))
                 ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
 
     x_fail_rate = num_x_fails / num_runs

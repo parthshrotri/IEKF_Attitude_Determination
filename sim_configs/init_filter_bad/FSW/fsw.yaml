@@ -1,3 +1,1 @@
 update_rate: 50  # Hz
-
-GNC: init_filter_bad/FSW/GNC.yaml

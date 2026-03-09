@@ -1,3 +1,0 @@
-update_rate: 50  # Hz
-
-GNC: sparse_meas_LIEKF_break/FSW/GNC.yaml

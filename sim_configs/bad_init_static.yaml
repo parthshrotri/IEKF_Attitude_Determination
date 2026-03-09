@@ -3,8 +3,7 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  vehicle_config: init_filter_bad/vehicle.yaml
-  fsw_config: init_filter_bad/FSW/fsw.yaml
+  config_loc: sim_configs/bad_init_static/
 
 output_files:
   dir: "outputs/bad_init_static/"

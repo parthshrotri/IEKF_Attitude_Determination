@@ -3,8 +3,7 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  vehicle_config: default/vehicle.yaml
-  fsw_config: default/FSW/fsw.yaml
+  config_loc: sim_configs/default/
 
 output_files:
   dir: "outputs/nominal_slew/"

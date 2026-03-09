@@ -3,9 +3,8 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  vehicle_config: sparse_meas_test/vehicle.yaml
-  fsw_config: sparse_meas_test/FSW/fsw.yaml
-
+  config_loc: sim_configs/sparse_meas_test/
+  
 output_files:
   dir: "outputs/test_sparse_meas/"
     

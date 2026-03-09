@@ -3,11 +3,10 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  vehicle_config: sparse_meas_MEKF_break/vehicle.yaml
-  fsw_config: sparse_meas_MEKF_break/FSW/fsw.yaml
+  config_loc: sim_configs/cam_meas_0.33hz/
 
 output_files:
-  dir: "outputs/MC_break_MEKF/"
+  dir: "outputs/MC_cam_meas_0.33hz/"
 
 MC_runs: 100
     

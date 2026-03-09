@@ -14,7 +14,7 @@ class GNC:
         self.ref_camera = vehicle.ref_camera
 
         # Load GNC config
-        with open(f"sim_configs/{gnc_cfg_loc}", "r") as f:
+        with open(gnc_cfg_loc, "r") as f:
             self.config = yaml.safe_load(f)
 
         self.star_catalog = utils.StarCatalog(self.config["star_catalog"]["loc"], 

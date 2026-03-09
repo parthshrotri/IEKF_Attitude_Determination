@@ -19,18 +19,21 @@ class Vehicle:
                  init_ang_vel):
 
         # Load vehicle config
-        with open(f"sim_configs/{vehicle_cfg_path}", "r") as f:
+        with open(vehicle_cfg_path, "r") as f:
             vehicle_cfg = yaml.safe_load(f)["spacecraft"]
         
+        parent = Path(vehicle_cfg_path).parent
         # Initialize sensors
         cameras = []
         for cur_cam in vehicle_cfg["sensors"]["cameras"]:
                 cam_cfg = vehicle_cfg["sensors"]["cameras"][cur_cam]
-                cameras.append(Camera(t_samples[0], cur_cam, cam_cfg["config"], cam_cfg["q_body_to_cam"], save_file=output_dir / cur_cam))
+                cam_cfg_loc = parent / cam_cfg["config_loc"]
+                cameras.append(Camera(t_samples[0], cur_cam, cam_cfg_loc, cam_cfg["q_body_to_cam"], save_file=output_dir / cur_cam))
         gyros = []
         for cur_gyro in vehicle_cfg["sensors"]["rate_gyros"]:
                 gyro_cfg = vehicle_cfg["sensors"]["rate_gyros"][cur_gyro]
-                gyros.append(RateGyro(t_samples[0], cur_gyro, gyro_cfg["config"]))
+                gyro_cfg_loc = parent / gyro_cfg["config_loc"]
+                gyros.append(RateGyro(t_samples[0], cur_gyro, gyro_cfg_loc))
         self.sensors = cameras + gyros
 
         self.ref_camera = cameras[0]

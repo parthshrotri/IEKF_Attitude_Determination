@@ -36,8 +36,8 @@ class Simulator:
             spice.furnsh(str(spice_dir / kernel))
 
         sim_cfg     = config["simulation"]
-        vehicle_cfg = config["input_files"]["vehicle_config"]
-        fsw_cfg     = config["input_files"]["fsw_config"]
+        vehicle_cfg = config["input_files"]["config_loc"] + "vehicle.yaml"
+        fsw_cfg     = config["input_files"]["config_loc"] + "FSW/fsw.yaml"
 
         # --- Time setup ---
         t_start = Time(sim_cfg["start_time"], scale="utc")

@@ -13,7 +13,7 @@ class Camera:
     def __init__(self, init_time, name, cam_cfg_loc, q_body_to_cam, save_file):
         self.name = name
         
-        with open(f"sim_configs/{cam_cfg_loc}", "r") as f:
+        with open(cam_cfg_loc, "r") as f:
             cam_cfg = yaml.safe_load(f)
 
         self.q_body_to_cam = Quaternion(*q_body_to_cam)

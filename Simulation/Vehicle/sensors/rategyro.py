@@ -18,7 +18,7 @@ class RateGyro:
             The standard deviation of the rate of change of the bias (rad/s^2).
         '''
         self.name = name
-        with open(f"sim_configs/{gyro_cfg_loc}", "r") as f:
+        with open(gyro_cfg_loc, "r") as f:
             gyro_cfg = yaml.safe_load(f)
 
         self.update_rate    = gyro_cfg["update_rate"]  # Hz

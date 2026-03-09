@@ -1,19 +1,22 @@
 import yaml
 import astropy.units as u
 
+from pathlib import Path
 from Simulation.FlightSoftware.GNC import gnc_manager
 
 class FSW:
     def __init__(self, init_time, fsw_cfg_loc, vehicle):
         # Load GNC config
-        with open(f"sim_configs/{fsw_cfg_loc}", "r") as f:
+        with open(fsw_cfg_loc, "r") as f:
             fsw_cfg = yaml.safe_load(f)
+
+        gnc_config_loc = Path(fsw_cfg_loc).parent / "GNC.yaml"
 
         self.vehicle        = vehicle
         self.last_update    = None
         self.time           = init_time
         self.update_rate    = fsw_cfg["update_rate"]  # Hz
-        self.gnc_manager    = gnc_manager.GNC(init_time, fsw_cfg["GNC"], vehicle, self)
+        self.gnc_manager    = gnc_manager.GNC(init_time, gnc_config_loc, vehicle, self)
 
         self.cmd_queue = []
         self.measurement_queue = []
