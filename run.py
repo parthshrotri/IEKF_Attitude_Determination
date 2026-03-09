@@ -1,10 +1,15 @@
-from tqdm import tqdm
+import os
 import yaml
 import argparse
 from multiprocessing import Pool
-from multiprocessing import set_start_method
+
+from tqdm import tqdm
 
 from Simulation.simulator import Simulator
+
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
 
 def run_mc(run_index):
     simulation = Simulator(config, MC_run=run_index)
