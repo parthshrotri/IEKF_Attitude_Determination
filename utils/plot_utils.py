@@ -133,60 +133,132 @@ def plot_quaternion_components(time, quat_history, title, label_prefix, fig_path
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
     plt.close()  # Close the figure to free up memory, since we'll load it again when we want to show it
 
-def plot_monte_carlo_results(run_data, title, ylabels, fig_path):
-    colors = ['m', 'g', 'b']
-    fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
+def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
+    colors = ['xkcd:lavender', 'xkcd:lime', 'xkcd:lightblue']
 
     num_runs = len(run_data)
+    run_success = np.zeros(num_runs, dtype=bool)
 
-    num_x_fails = 0
-    num_y_fails = 0
-    num_z_fails = 0
-
-    for run in run_data:
+    for i, run in enumerate(run_data):
         time_arrays = run["time_arrays"]
         data_arrays = run["data_arrays"]
         cov_diag_arrays = run["cov_diag_arrays"]
-        for i in range(3):
-            # Check when error exceeds 3-sigma
-            error_outside_cov = np.abs(data_arrays[:, i]) > 3*np.sqrt(cov_diag_arrays[:,i])
-            time_error_outside_cov = time_arrays[error_outside_cov]
+        
+        data_arrays = 2*data_arrays[:,0:3]  # Convert quaternion error to small angle approximation for vector part
 
-            # Check if largest contiguous segment of time where error exceeds 3-sigma
-            if len(time_error_outside_cov) > 0:
-                time_diffs = np.diff(time_error_outside_cov)
-                gap_threshold = 0.5  # If time gap between consecutive points is greater than this, consider it a separate segment
-                segment_boundaries = np.where(time_diffs > gap_threshold)[0]
-                segment_starts = np.insert(segment_boundaries + 1, 0, 0)
-                segment_ends = np.append(segment_boundaries, len(time_error_outside_cov) - 1)
+        error_outside_cov = np.any(np.abs(data_arrays) > 3*np.sqrt(cov_diag_arrays), axis=1)
 
-                longest_segment_length = 0
+        times_error_outside_cov = time_arrays[error_outside_cov]
 
-                for start, end in zip(segment_starts, segment_ends):
-                    segment_length = time_error_outside_cov[end] - time_error_outside_cov[start]
-                    if segment_length > longest_segment_length:
-                        longest_segment_length = segment_length
+        RMSE = np.sqrt(np.mean(data_arrays**2, axis=0))
+        if np.any(RMSE > 1.0): # TBR: If RMSE of attitude error exceeds 1.0 rad, consider it a failure regardless of covariance consistency
+            run_success[i] = False
+            continue
 
-                # If error exceeds 3-sigma for more than 5.0 seconds, consider it a divergence (TBR)
-                if longest_segment_length > 5.0:
-                    ax[i].plot(time_arrays, data_arrays[:,i], color='r', alpha=3/(num_runs))
-                    if i == 0:
-                        num_x_fails += 1
-                    elif i == 1:
-                        num_y_fails += 1
+        if len(times_error_outside_cov) > 0:
+            time_diffs = np.diff(times_error_outside_cov)
+            gap_threshold = 0.5  # If time gap between consecutive points is greater than this, consider it a separate segment
+            segment_boundaries = np.where(time_diffs > gap_threshold)[0]
+            segment_starts = np.insert(segment_boundaries + 1, 0, 0)
+            segment_ends = np.append(segment_boundaries, len(times_error_outside_cov) - 1)
+
+            longest_segment_length = 0
+            for start, end in zip(segment_starts, segment_ends):
+                segment_length = times_error_outside_cov[end] - times_error_outside_cov[start]
+                if segment_length > longest_segment_length:
+                    longest_segment_length = segment_length
+                    if longest_segment_length > 20.0:  # If error exceeds 3-sigma for more than 20.0 seconds, consider it a divergence (TBR)
+                        run_success[i] = False
                     else:
-                        num_z_fails += 1
-                else:
-                    ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=10/(num_runs))
-                    ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
-            else:
-                ax[i].plot(time_arrays, data_arrays[:,i], color='k', alpha=10/(num_runs))
-                ax[i].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,i]), 3*np.sqrt(cov_diag_arrays[:,i]), color=colors[i], alpha=1/(num_runs))
+                        run_success[i] = True
+        else:
+            run_success[i] = True
 
-    x_fail_rate = num_x_fails / num_runs
-    y_fail_rate = num_y_fails / num_runs
-    z_fail_rate = num_z_fails / num_runs
-    ax[0].set_title(f"Failure Rate: X={x_fail_rate:.1%}, Y={y_fail_rate:.1%}, Z={z_fail_rate:.1%}")
+    num_success = np.sum(run_success)
+    num_fail = num_runs - num_success
+    fail_rate = num_fail / num_runs
+
+    fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
+    
+    for i, run in enumerate(run_data):
+        time_arrays = run["time_arrays"]
+        data_arrays = run["data_arrays"]
+        cov_diag_arrays = run["cov_diag_arrays"]
+
+        data_arrays = 2*data_arrays[:,0:3]  # Convert quaternion error to small angle approximation for vector part
+
+        if run_success[i]: 
+            ax[0].plot(time_arrays, data_arrays[:,0], color='k', alpha=5/num_success, zorder=3)
+            ax[1].plot(time_arrays, data_arrays[:,1], color='k', alpha=5/num_success, zorder=3)
+            ax[2].plot(time_arrays, data_arrays[:,2], color='k', alpha=5/num_success, zorder=3)
+            ax[0].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,0]), 3*np.sqrt(cov_diag_arrays[:,0]), color=colors[0], alpha=1/num_success, zorder=2)
+            ax[1].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,1]), 3*np.sqrt(cov_diag_arrays[:,1]), color=colors[1], alpha=1/num_success, zorder=2)
+            ax[2].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,2]), 3*np.sqrt(cov_diag_arrays[:,2]), color=colors[2], alpha=1/num_success, zorder=2)
+    ax[0].set_title(f"Failure Rate: {fail_rate:.1%}")
+
+    ax[0].set_ylabel(ylabels[0])
+    ax[1].set_ylabel(ylabels[1])
+    ax[2].set_ylabel(ylabels[2])
+
+    ax[2].set_xlabel("Time (s)")
+    fig.suptitle(title)
+    fig.tight_layout()
+    fig.savefig(fig_path.with_suffix('.png'))
+    pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
+    plt.close()
+
+def plot_monte_carlo_bias_results(run_data, title, ylabels, fig_path):
+    colors = ['xkcd:lavender', 'xkcd:lime', 'xkcd:lightblue']
+
+    num_runs = len(run_data)
+    run_success = np.zeros(num_runs, dtype=bool)
+
+    for i, run in enumerate(run_data):
+        time_arrays = run["time_arrays"]
+        data_arrays = run["data_arrays"]
+        cov_diag_arrays = run["cov_diag_arrays"]
+        
+        error_outside_cov = np.any(np.abs(data_arrays) > 3*np.sqrt(cov_diag_arrays), axis=1)
+        times_error_outside_cov = time_arrays[error_outside_cov]
+        if len(times_error_outside_cov) > 0:
+            time_diffs = np.diff(times_error_outside_cov)
+            gap_threshold = 0.5  # If time gap between consecutive points is greater than this, consider it a separate segment
+            segment_boundaries = np.where(time_diffs > gap_threshold)[0]
+            segment_starts = np.insert(segment_boundaries + 1, 0, 0)
+            segment_ends = np.append(segment_boundaries, len(times_error_outside_cov) - 1)
+
+            longest_segment_length = 0
+            for start, end in zip(segment_starts, segment_ends):
+                segment_length = times_error_outside_cov[end] - times_error_outside_cov[start]
+                if segment_length > longest_segment_length:
+                    longest_segment_length = segment_length
+                    if longest_segment_length > 10.0:  # If error exceeds 3-sigma for more than 10.0 seconds, consider it a divergence (TBR)
+                        run_success[i] = False
+                    else:
+                        run_success[i] = True
+        else:
+                run_success[i] = True
+
+    num_success = np.sum(run_success)
+    num_fail = num_runs - num_success
+    fail_rate = num_fail / num_runs
+
+    fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
+
+    for i, run in enumerate(run_data):
+        time_arrays = run["time_arrays"]
+        data_arrays = run["data_arrays"]
+        cov_diag_arrays = run["cov_diag_arrays"]
+
+        if run_success[i]: 
+            ax[0].plot(time_arrays, data_arrays[:,0], color='k', alpha=5/num_success)
+            ax[1].plot(time_arrays, data_arrays[:,1], color='k', alpha=5/num_success)
+            ax[2].plot(time_arrays, data_arrays[:,2], color='k', alpha=5/num_success)
+            ax[0].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,0]), 3*np.sqrt(cov_diag_arrays[:,0]), color=colors[0], alpha=1/num_success)
+            ax[1].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,1]), 3*np.sqrt(cov_diag_arrays[:,1]), color=colors[1], alpha=1/num_success)
+            ax[2].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,2]), 3*np.sqrt(cov_diag_arrays[:,2]), color=colors[2], alpha=1/num_success)
+
+    ax[0].set_title(f"Failure Rate: {fail_rate:.1%}")
 
     ax[0].set_ylabel(ylabels[0])
     ax[1].set_ylabel(ylabels[1])

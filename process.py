@@ -22,7 +22,9 @@ if __name__ == "__main__":
 
     if config.get("MC_runs", 0) > 0:
         print("Loading Monte Carlo simulation log data...")
+        MEKF_est_error_data = []
         MEKF_bias_data = []
+        LIEKF_est_error_data = []
         LIEKF_bias_data = []
         for i in range(config["MC_runs"]):
             data_file = output_dir / f"simulation_{i}.npz"
@@ -36,22 +38,43 @@ if __name__ == "__main__":
             time_est_bias_LIEKF, bias_est_history_LIEKF = plot_utils.get_log_arrays(sim_data, "est/LIEKF/gyro_bias_error")
             time_LIEKF_cov_diag, LIEKF_cov_history_diag = plot_utils.get_log_arrays(sim_data, "est/LIEKF/error_cov_diag")
 
+            MEKF_est_error_data.append({
+                "time_arrays": time_est_error_MEKF,
+                "data_arrays": att_est_error_history_MEKF,
+                "cov_diag_arrays": MEKF_cov_history_diag[:,0:3]
+            })
             MEKF_bias_data.append({
                 "time_arrays": time_est_bias_MEKF,
                 "data_arrays": bias_est_history_MEKF,
                 "cov_diag_arrays": MEKF_cov_history_diag[:,3:6]
+            })
+
+            LIEKF_est_error_data.append({
+                "time_arrays": time_est_error_LIEKF,
+                "data_arrays": att_est_error_history_LIEKF,
+                "cov_diag_arrays": LIEKF_cov_history_diag[:,0:3]
             })
             LIEKF_bias_data.append({
                 "time_arrays": time_est_bias_LIEKF,
                 "data_arrays": bias_est_history_LIEKF,
                 "cov_diag_arrays": LIEKF_cov_history_diag[:,3:6]
             })
-        plot_utils.plot_monte_carlo_results(MEKF_bias_data, 
+        plot_utils.plot_monte_carlo_att_results(MEKF_est_error_data, 
+                                                title="MEKF Attitude Estimation Error History - Monte Carlo",
+                                                ylabels=["Att Est Error X (rad)", "Att Est Error Y (rad)", "Att Est Error Z (rad)"],
+                                                fig_path=fig_dir / "MEKF_attitude_estimation_error_history_Monte_Carlo")
+        plot_utils.plot_monte_carlo_att_results(LIEKF_est_error_data, 
+                                                title="LIEKF Attitude Estimation Error History - Monte Carlo",
+                                                ylabels=["Att Est Error X (rad)", "Att Est Error Y (rad)", "Att Est Error Z (rad)"],
+                                                fig_path=fig_dir / "LIEKF_attitude_estimation_error_history_Monte_Carlo")
+
+        
+        plot_utils.plot_monte_carlo_bias_results(MEKF_bias_data, 
                                             title="MEKF Bias Estimation Error History - Monte Carlo",
                                             ylabels=["Bias Error X (rad/s)", "Bias Error Y (rad/s)", "Bias Error Z (rad/s)"],
                                             fig_path=fig_dir / "MEKF_bias_estimation_error_history_Monte_Carlo")
         
-        plot_utils.plot_monte_carlo_results(LIEKF_bias_data, 
+        plot_utils.plot_monte_carlo_bias_results(LIEKF_bias_data, 
                                             title="LIEKF Bias Estimation Error History - Monte Carlo",
                                             ylabels=["Bias Error X (rad/s)", "Bias Error Y (rad/s)", "Bias Error Z (rad/s)"],
                                             fig_path=fig_dir / "LIEKF_bias_estimation_error_history_Monte_Carlo")

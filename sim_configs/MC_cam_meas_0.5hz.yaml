@@ -6,7 +6,7 @@ input_files:
   config_loc: sim_configs/cam_meas_0.5hz/
 
 output_files:
-  dir: "outputs/cam_meas_0.5hz/"
+  dir: "outputs/MC_cam_meas_0.5hz/"
 
 MC_runs: 100
     
