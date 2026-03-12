@@ -1,7 +1,10 @@
 import os
+import time
 import yaml
 import argparse
 from multiprocessing import Pool
+
+import numpy as np
 
 from tqdm import tqdm
 
@@ -11,7 +14,11 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["OPENBLAS_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
+BASE_SEED = int(time.time())
+
 def run_mc(run_index):
+    # Set a unique random seed for each Monte Carlo run
+    np.random.seed(BASE_SEED + run_index)
     simulation = Simulator(config, MC_run=run_index)
     simulation.run()
 
