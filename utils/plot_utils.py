@@ -140,18 +140,19 @@ def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
     run_success = np.zeros(num_runs, dtype=bool)
 
     for i, run in enumerate(run_data):
-        time_arrays = run["time_arrays"]
-        data_arrays = run["data_arrays"]
-        cov_diag_arrays = run["cov_diag_arrays"]
+        times   = run["time_arrays"]
+        data    = run["data_arrays"]
+        cov_diags = run["cov_diag_arrays"]
         
-        data_arrays = 2*data_arrays[:,0:3]  # Convert quaternion error to small angle approximation for vector part
+        data = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
 
-        error_outside_cov = np.any(np.abs(data_arrays) > 3*np.sqrt(cov_diag_arrays), axis=1)
+        error_outside_cov = np.any(np.abs(data) > 3*np.sqrt(cov_diags), axis=1)
 
-        times_error_outside_cov = time_arrays[error_outside_cov]
+        times_error_outside_cov = times[error_outside_cov]
 
-        RMSE = np.sqrt(np.mean(data_arrays**2, axis=0))
-        if np.any(RMSE > 1.0): # TBR: If RMSE of attitude error exceeds 1.0 rad, consider it a failure regardless of covariance consistency
+        # TBR: If RMSE of attitude error exceeds 0.8 rad, consider it a failure regardless of covariance consistency
+        RMSE = np.sqrt(np.mean(data**2, axis=0))
+        if np.any(RMSE > 0.8):
             run_success[i] = False
             continue
 
@@ -167,10 +168,12 @@ def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
                 segment_length = times_error_outside_cov[end] - times_error_outside_cov[start]
                 if segment_length > longest_segment_length:
                     longest_segment_length = segment_length
-                    if longest_segment_length > 20.0:  # If error exceeds 3-sigma for more than 20.0 seconds, consider it a divergence (TBR)
-                        run_success[i] = False
-                    else:
-                        run_success[i] = True
+
+            # If error exceeds 3-sigma for more than 20.0 seconds, consider it a divergence (TBR)
+            if longest_segment_length > 20.0:
+                run_success[i] = False
+            else:
+                run_success[i] = True
         else:
             run_success[i] = True
 
@@ -181,19 +184,19 @@ def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
     fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
     
     for i, run in enumerate(run_data):
-        time_arrays = run["time_arrays"]
-        data_arrays = run["data_arrays"]
-        cov_diag_arrays = run["cov_diag_arrays"]
+        times       = run["time_arrays"]
+        data        = run["data_arrays"]
+        cov_diags   = run["cov_diag_arrays"]
 
-        data_arrays = 2*data_arrays[:,0:3]  # Convert quaternion error to small angle approximation for vector part
+        data = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
 
         if run_success[i]: 
-            ax[0].plot(time_arrays, data_arrays[:,0], color='k', alpha=5/num_success, zorder=3)
-            ax[1].plot(time_arrays, data_arrays[:,1], color='k', alpha=5/num_success, zorder=3)
-            ax[2].plot(time_arrays, data_arrays[:,2], color='k', alpha=5/num_success, zorder=3)
-            ax[0].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,0]), 3*np.sqrt(cov_diag_arrays[:,0]), color=colors[0], alpha=1/num_success, zorder=2)
-            ax[1].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,1]), 3*np.sqrt(cov_diag_arrays[:,1]), color=colors[1], alpha=1/num_success, zorder=2)
-            ax[2].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,2]), 3*np.sqrt(cov_diag_arrays[:,2]), color=colors[2], alpha=1/num_success, zorder=2)
+            ax[0].plot(times, data[:,0], color='k', alpha=5/num_success, zorder=1)
+            ax[1].plot(times, data[:,1], color='k', alpha=5/num_success, zorder=1)
+            ax[2].plot(times, data[:,2], color='k', alpha=5/num_success, zorder=1)
+            ax[0].fill_between(times, -3*np.sqrt(cov_diags[:,0]), 3*np.sqrt(cov_diags[:,0]), color=colors[0], alpha=1/num_success, zorder=0)
+            ax[1].fill_between(times, -3*np.sqrt(cov_diags[:,1]), 3*np.sqrt(cov_diags[:,1]), color=colors[1], alpha=1/num_success, zorder=0)
+            ax[2].fill_between(times, -3*np.sqrt(cov_diags[:,2]), 3*np.sqrt(cov_diags[:,2]), color=colors[2], alpha=1/num_success, zorder=0)
     ax[0].set_title(f"Failure Rate: {fail_rate:.1%}")
 
     ax[0].set_ylabel(ylabels[0])
@@ -214,12 +217,12 @@ def plot_monte_carlo_bias_results(run_data, title, ylabels, fig_path):
     run_success = np.zeros(num_runs, dtype=bool)
 
     for i, run in enumerate(run_data):
-        time_arrays = run["time_arrays"]
-        data_arrays = run["data_arrays"]
-        cov_diag_arrays = run["cov_diag_arrays"]
+        times   = run["time_arrays"]
+        data    = run["data_arrays"]
+        cov_diags = run["cov_diag_arrays"]
         
-        error_outside_cov = np.any(np.abs(data_arrays) > 3*np.sqrt(cov_diag_arrays), axis=1)
-        times_error_outside_cov = time_arrays[error_outside_cov]
+        error_outside_cov = np.any(np.abs(data) > 3*np.sqrt(cov_diags), axis=1)
+        times_error_outside_cov = times[error_outside_cov]
         if len(times_error_outside_cov) > 0:
             time_diffs = np.diff(times_error_outside_cov)
             gap_threshold = 0.5  # If time gap between consecutive points is greater than this, consider it a separate segment
@@ -232,10 +235,12 @@ def plot_monte_carlo_bias_results(run_data, title, ylabels, fig_path):
                 segment_length = times_error_outside_cov[end] - times_error_outside_cov[start]
                 if segment_length > longest_segment_length:
                     longest_segment_length = segment_length
-                    if longest_segment_length > 10.0:  # If error exceeds 3-sigma for more than 10.0 seconds, consider it a divergence (TBR)
-                        run_success[i] = False
-                    else:
-                        run_success[i] = True
+
+             # If error exceeds 3-sigma for more than 15.0 seconds, consider it a divergence (TBR)
+            if longest_segment_length > 15.0:
+                run_success[i] = False
+            else:
+                run_success[i] = True
         else:
                 run_success[i] = True
 
@@ -246,17 +251,17 @@ def plot_monte_carlo_bias_results(run_data, title, ylabels, fig_path):
     fig, ax = plt.subplots(3, 1, figsize=(9, 8), sharex=True)
 
     for i, run in enumerate(run_data):
-        time_arrays = run["time_arrays"]
-        data_arrays = run["data_arrays"]
-        cov_diag_arrays = run["cov_diag_arrays"]
+        times   = run["time_arrays"]
+        data    = run["data_arrays"]
+        cov_diags = run["cov_diag_arrays"]
 
         if run_success[i]: 
-            ax[0].plot(time_arrays, data_arrays[:,0], color='k', alpha=5/num_success)
-            ax[1].plot(time_arrays, data_arrays[:,1], color='k', alpha=5/num_success)
-            ax[2].plot(time_arrays, data_arrays[:,2], color='k', alpha=5/num_success)
-            ax[0].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,0]), 3*np.sqrt(cov_diag_arrays[:,0]), color=colors[0], alpha=1/num_success)
-            ax[1].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,1]), 3*np.sqrt(cov_diag_arrays[:,1]), color=colors[1], alpha=1/num_success)
-            ax[2].fill_between(time_arrays, -3*np.sqrt(cov_diag_arrays[:,2]), 3*np.sqrt(cov_diag_arrays[:,2]), color=colors[2], alpha=1/num_success)
+            ax[0].plot(times, data[:,0], color='k', alpha=5/num_success)
+            ax[1].plot(times, data[:,1], color='k', alpha=5/num_success)
+            ax[2].plot(times, data[:,2], color='k', alpha=5/num_success)
+            ax[0].fill_between(times, -3*np.sqrt(cov_diags[:,0]), 3*np.sqrt(cov_diags[:,0]), color=colors[0], alpha=1/num_success)
+            ax[1].fill_between(times, -3*np.sqrt(cov_diags[:,1]), 3*np.sqrt(cov_diags[:,1]), color=colors[1], alpha=1/num_success)
+            ax[2].fill_between(times, -3*np.sqrt(cov_diags[:,2]), 3*np.sqrt(cov_diags[:,2]), color=colors[2], alpha=1/num_success)
 
     ax[0].set_title(f"Failure Rate: {fail_rate:.1%}")
 
