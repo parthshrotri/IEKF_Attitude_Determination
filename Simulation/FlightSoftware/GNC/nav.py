@@ -58,8 +58,16 @@ class MEKF:
         G = np.block([[-np.eye(3), np.zeros((3, 3))],
                       [np.zeros((3, 3)), np.eye(3)]])
         
+        Q_discrete_00 = self.gyro_noise_sigma**2 * dt * np.eye(3) + self.gyro_bias_rate_sigma**2 * dt**3 / 3 * np.eye(3)
+        Q_discrete_01 = -self.gyro_bias_rate_sigma**2 * dt**2 / 2 * np.eye(3)
+        Q_discrete_10 = -self.gyro_bias_rate_sigma**2 * dt**2 / 2 * np.eye(3)
+        Q_discrete_11 = self.gyro_bias_rate_sigma**2 * dt * np.eye(3)
+        
+        Q_discrete = np.block([[Q_discrete_00, Q_discrete_01],
+                               [Q_discrete_10, Q_discrete_11]])
+        
         phi = expm(F * dt)  # State transition matrix
-        self.error_cov = phi @ self.error_cov @ phi.T + G @ self.Q @ G.T * dt
+        self.error_cov = phi @ self.error_cov @ phi.T + G @ Q_discrete @ G.T
         
     def update(self, time, hip_ids, measurements):
         # Reset error state for measurement update
@@ -155,8 +163,16 @@ class LIEKF:
         G = np.block([[-np.eye(3), np.zeros((3, 3))],
                       [np.zeros((3, 3)), np.eye(3)]])
         
+        Q_discrete_00 = self.gyro_noise_sigma**2 * dt * np.eye(3) + self.gyro_bias_rate_sigma**2 * dt**3 / 3 * np.eye(3)
+        Q_discrete_01 = -self.gyro_bias_rate_sigma**2 * dt**2 / 2 * np.eye(3)
+        Q_discrete_10 = -self.gyro_bias_rate_sigma**2 * dt**2 / 2 * np.eye(3)
+        Q_discrete_11 = self.gyro_bias_rate_sigma**2 * dt * np.eye(3)
+        
+        Q_discrete = np.block([[Q_discrete_00, Q_discrete_01],
+                               [Q_discrete_10, Q_discrete_11]])
+        
         phi = expm(F * dt)  # State transition matrix
-        self.error_cov = phi @ self.error_cov @ phi.T + G @ self.Q @ G.T * dt
+        self.error_cov = phi @ self.error_cov @ phi.T + G @ Q_discrete @ G.T
         
     def update(self, time, hip_ids, measurements):
         # Reset error state for measurement update
