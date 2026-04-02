@@ -276,33 +276,32 @@ def plot_monte_carlo_bias_results(run_data, title, ylabels, fig_path):
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
     plt.close()
 
-def plot_allan_variance(time, data, title, ylabel, fig_path):
-    fs = 1 / np.mean(np.diff(time))  # Sampling frequency
-    ts = 1 / fs
-    gyro_bias = data
-    N = len(gyro_bias)
-
-    theta = np.cumsum(gyro_bias) * ts  # Convert bias to angle
-    tau, allan_var = allan_variance(theta, fs)
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.loglog(tau, allan_var, label='Allan Variance')
+def plot_angular_random_walk_allan(time, angular_rate_history, title, fig_path):
+    angle = np.zeros_like(angular_rate_history)
+    for i in range(1, len(time)):
+        dt = time[i] - time[i-1]
+        angle[i] = angle[i-1] + angular_rate_history[i-1]*dt
+    taus, allan_dev = allan_variance(time, angle)
+    fig, ax = plt.subplots(figsize=(8,6))
+    ax.loglog(taus, allan_dev, label='Allan Deviation')
     ax.set_xlabel('Cluster Duration (s)')
-    ax.set_ylabel(ylabel)
+    ax.set_ylabel('Allan Deviation (rad)')
     ax.set_title(title)
     ax.grid(True, which='both', ls='--')
     ax.legend()
     fig.savefig(fig_path.with_suffix('.png'))
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
     plt.close()
+    
+def allan_variance(time, angle_history, maxNumM=100):
+    taus = np.logspace(-2, 2, num=20)  # Logarithmically spaced tau values from 0.01s to 100s
 
-def allan_variance(dataArr, fs, maxNumM=100):
-    ts = 1.0 / fs
-    N = len(dataArr)
+    N = len(angle_history)
     Mmax = 2**np.floor(np.log2(N / 2))
     M = np.logspace(np.log10(1), np.log10(Mmax), num=maxNumM)
     M = np.ceil(M)  # Round up to integer
     M = np.unique(M)  # Remove duplicates
-    taus = M * ts  # Compute 'cluster durations' tau
+    taus = M * (time[1] - time[0])  # Compute 'cluster durations' tau
 
     # Compute Allan variance
     allanVar = np.zeros(len(M))
@@ -310,7 +309,7 @@ def allan_variance(dataArr, fs, maxNumM=100):
         twoMi = int(2 * mi)
         mi = int(mi)
         allanVar[i] = np.sum(
-            (dataArr[twoMi:N] - (2.0 * dataArr[mi:N-mi]) + dataArr[0:N-twoMi])**2
+            (angle_history[twoMi:N] - (2.0 * angle_history[mi:N-mi]) + angle_history[0:N-twoMi])**2
         )
     
     allanVar /= (2.0 * taus**2) * (N - (2.0 * M))

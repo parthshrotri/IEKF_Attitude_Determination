@@ -16,9 +16,9 @@ if __name__ == "__main__":
 
     output_dir = Path(config["output_files"]["dir"])
     fig_dir = output_dir / "analysis_figs"
-    fig_dir.mkdir(parents=True, exist_ok=True)
-    print("Making GIF from camera images...")
-    plot_utils.make_cam_gif(output_dir, fig_dir / "camera.gif", fps=5)
+    # fig_dir.mkdir(parents=True, exist_ok=True)
+    # print("Making GIF from camera images...")
+    # plot_utils.make_cam_gif(output_dir, fig_dir / "camera.gif", fps=5)
 
     if config.get("MC_runs", 0) > 0:
         print("Loading Monte Carlo simulation log data...")
@@ -101,6 +101,9 @@ if __name__ == "__main__":
         # Get control torque
         time_torque, ctrl_torque_history = plot_utils.get_log_arrays(sim_data, "ctrl/torque")
 
+        # Get gyro measurements
+        time_gyro_meas, gyro_meas_history = plot_utils.get_log_arrays(sim_data, "meas/gyro0")
+
         print("Plotting results...")
         # Plot Attitude Quaternion Components
         plot_utils.plot_quaternion_components(
@@ -168,3 +171,5 @@ if __name__ == "__main__":
             ylabels=["Torque X (Nm)", "Torque Y (Nm)", "Torque Z (Nm)"],
             fig_path=fig_dir / "control_torque_history"
         )
+
+        plot_utils.plot_angular_random_walk_allan(time_gyro_meas, gyro_meas_history, title="Gyro Measurement History", fig_path=fig_dir / "gyro_measurement_history")
