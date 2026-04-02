@@ -3,6 +3,7 @@ import tqdm
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+import allantools as at
 
 import glob
 import imageio.v2 as imageio
@@ -281,36 +282,26 @@ def plot_angular_random_walk_allan(time, angular_rate_history, title, fig_path):
     for i in range(1, len(time)):
         dt = time[i] - time[i-1]
         angle[i] = angle[i-1] + angular_rate_history[i-1]*dt
-    taus, allan_dev = allan_variance(time, angle)
-    fig, ax = plt.subplots(figsize=(8,6))
-    ax.loglog(taus, allan_dev, label='Allan Deviation')
-    ax.set_xlabel('Cluster Duration (s)')
-    ax.set_ylabel('Allan Deviation (rad)')
-    ax.set_title(title)
-    ax.grid(True, which='both', ls='--')
-    ax.legend()
+    
+    sample_rate = 1/np.mean(np.diff(time))
+    taus_x, devs_x, _, _ = at.oadev(angle[:,0], rate=sample_rate)
+    taus_y, devs_y, _, _ = at.oadev(angle[:,1], rate=sample_rate)
+    taus_z, devs_z, _, _ = at.oadev(angle[:,2], rate=sample_rate)
+
+    taus = [taus_x, taus_y, taus_z]
+    devs = [devs_x, devs_y, devs_z]
+
+    fig, ax = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
+    for i, ax_i in enumerate(ax):
+        ax_i.loglog(taus[i], devs[i], label=f'{["X", "Y", "Z"][i]}-axis', color=['r', 'g', 'b'][i])
+        ax_i.set_ylabel("Allan Deviation (rad)")
+        ax_i.set_title("Allan Deviation of Gyro Angle")
+        ax_i.legend()
+        ax_i.grid(True, which='both', ls='--')
+    ax[-1].set_xlabel("Averaging Time (s)")
+    fig.suptitle(title)
+    fig.tight_layout()
     fig.savefig(fig_path.with_suffix('.png'))
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
-    plt.close()
+    plt.close()    
     
-def allan_variance(time, angle_history, maxNumM=100):
-    taus = np.logspace(-2, 2, num=20)  # Logarithmically spaced tau values from 0.01s to 100s
-
-    N = len(angle_history)
-    Mmax = 2**np.floor(np.log2(N / 2))
-    M = np.logspace(np.log10(1), np.log10(Mmax), num=maxNumM)
-    M = np.ceil(M)  # Round up to integer
-    M = np.unique(M)  # Remove duplicates
-    taus = M * (time[1] - time[0])  # Compute 'cluster durations' tau
-
-    # Compute Allan variance
-    allanVar = np.zeros(len(M))
-    for i, mi in enumerate(M):
-        twoMi = int(2 * mi)
-        mi = int(mi)
-        allanVar[i] = np.sum(
-            (angle_history[twoMi:N] - (2.0 * angle_history[mi:N-mi]) + angle_history[0:N-twoMi])**2
-        )
-    
-    allanVar /= (2.0 * taus**2) * (N - (2.0 * M))
-    return (taus, np.sqrt(allanVar))
