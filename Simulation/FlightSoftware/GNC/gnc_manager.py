@@ -76,13 +76,13 @@ class GNC:
         else:
             if self.config["LIEKF"]["init_est"] == "AUTO":
                 if measurement["type"] == "camera" and len(measurement["data"]["stars"][0]) >= 2: # Need at least 2 stars for initial attitude determination
-                    init_att_est = nav.get_attitude_from_stars(measurement["time"], 
+                    init_att_est, init_error_cov = nav.get_attitude_from_stars(measurement["time"], 
                                                             measurement["data"]["stars"][0],
                                                             measurement["data"]["stars"][1], 
                                                             self.ref_camera)
                     self.LIEKF.initialize_filter(measurement["time"], 
                                                 init_att_est, 
-                                                np.eye(6) * 0.01) #UPDATE THIS ERROR COV BASED ON DAVENPORT
+                                                init_error_cov)
                     return True
                 else:
                     return False
@@ -103,13 +103,13 @@ class GNC:
         else:
             if self.config["MEKF"]["init_est"] == "AUTO":
                 if measurement["type"] == "camera" and len(measurement["data"]["stars"][0]) >= 2:  # Need at least 2 stars for initial attitude determination
-                    init_att_est = nav.get_attitude_from_stars(measurement["time"], 
+                    init_att_est, init_error_cov = nav.get_attitude_from_stars(measurement["time"], 
                                                             measurement["data"]["stars"][0],
                                                             measurement["data"]["stars"][1], 
                                                             self.ref_camera)
                     self.MEKF.initialize_filter(measurement["time"], 
                                                 init_att_est, 
-                                                np.eye(6) * 0.01) #UPDATE THIS ERROR COV BASED ON DAVENPORT
+                                                init_error_cov)
                     return True
                 else:
                     return False

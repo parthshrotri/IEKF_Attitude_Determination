@@ -290,18 +290,67 @@ def plot_angular_random_walk_allan(time, angular_rate_history, title, fig_path):
 
     taus = [taus_x, taus_y, taus_z]
     devs = [devs_x, devs_y, devs_z]
+    label = ['X-axis', 'Y-axis', 'Z-axis']
+    colors = ['r', 'g', 'b']
 
     fig, ax = plt.subplots(3, 1, figsize=(10, 8), sharex=True)
     for i, ax_i in enumerate(ax):
-        ax_i.loglog(taus[i], devs[i], label=f'{["X", "Y", "Z"][i]}-axis', color=['r', 'g', 'b'][i])
+        ang_RW_coeff = calc_ang_RW(taus[i], devs[i])
+        ang_rate_RW_coeff = calc_ang_rate_RW(taus[i], devs[i])
+        ang_bias_inst_coeff, scfB = calc_bias_instability(taus[i], devs[i])
+
+        ang_RW = np.sqrt(ang_RW_coeff**2/(np.mean(np.diff(time))))
+        ang_rate_RW = np.sqrt(ang_rate_RW_coeff**2*np.mean(np.diff(time))/3)
+
+        ax_i.loglog(taus[i], devs[i], label=f'{label[i]}', color=colors[i])
+
+        ax_i.loglog(taus[i], ang_RW_coeff/np.sqrt(taus[i]), label=f'{label[i]} Angular RW: {ang_RW:.4f}', color=colors[i], linestyle='--')
+        ax_i.loglog(taus[i], ang_rate_RW_coeff*np.sqrt(taus[i]/3), label=f'{label[i]} Angular Rate RW: {ang_rate_RW:.4f}', color=colors[i], linestyle=':')  
+        ax_i.loglog(taus[i], ang_bias_inst_coeff*scfB*np.ones_like(taus[i]), label=f'{label[i]} Bias Instability: {ang_bias_inst_coeff*scfB:.4f}', color=colors[i], linestyle='-.')  
         ax_i.set_ylabel("Allan Deviation (rad)")
-        ax_i.set_title("Allan Deviation of Gyro Angle")
         ax_i.legend()
         ax_i.grid(True, which='both', ls='--')
+    ax[0].set_title("Allan Deviation of Gyro Angle")
     ax[-1].set_xlabel("Averaging Time (s)")
     fig.suptitle(title)
     fig.tight_layout()
     fig.savefig(fig_path.with_suffix('.png'))
     pickle.dump(fig, open(fig_path.with_suffix('.pkl'), 'wb'))
     plt.close()    
-    
+
+def calc_ang_RW(tau, dev):
+    slope = -0.5
+    logtau = np.log10(tau)
+    logdev = np.log10(dev)
+    dlogdev = np.diff(logdev) / np.diff(logtau)
+    idx = np.argmin(np.abs(dlogdev - slope))
+
+    intercept = logdev[idx] - slope*logtau[idx]
+    logN = slope*np.log10(1) + intercept  # Allan deviation at tau=1s
+    N = 10**logN
+    return N
+
+def calc_ang_rate_RW(tau, dev):
+    slope = 0.5
+    logtau = np.log10(tau)
+    logdev = np.log10(dev)
+    dlogdev = np.diff(logdev) / np.diff(logtau)
+    idx = np.argmin(np.abs(dlogdev - slope))
+
+    intercept = logdev[idx] - slope*logtau[idx]
+    logK = slope*np.log10(3) + intercept  # Allan deviation at tau=3s
+    K = 10**logK
+    return K   
+
+def calc_bias_instability(tau, dev):
+    slope = 0
+    logtau = np.log10(tau)
+    logdev = np.log10(dev)
+    dlogdev = np.diff(logdev) / np.diff(logtau)
+    idx = np.argmin(np.abs(dlogdev - slope))
+
+    intercept = logdev[idx] - slope*logtau[idx]
+    scfB = np.sqrt(2*np.log(2)/np.pi)
+    logB = intercept - np.log10(scfB)
+    B = 10**logB
+    return B, scfB

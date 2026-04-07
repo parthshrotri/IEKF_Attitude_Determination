@@ -250,6 +250,7 @@ def get_attitude_from_stars(time, star_ids, star_meas_los, camera):
     catalog_DE = camera.star_catalog.DE[idxs]
     catalog_pmRA = camera.star_catalog.pmRA[idxs]
     catalog_pmDE = camera.star_catalog.pmDE[idxs]
+    camera_sigma = camera.sigma_los
 
     alphas = catalog_RA + (catalog_pmRA / np.cos(catalog_DE)) * years_since_epoch
     deltas = catalog_DE + catalog_pmDE * years_since_epoch
@@ -260,11 +261,11 @@ def get_attitude_from_stars(time, star_ids, star_meas_los, camera):
     star_los_icrf[:, 2] = np.sin(deltas)
 
     # (Davenport's q-method) to find attitude
-    weights = np.ones(len(star_ids))
-    att_quat = davenport(star_los_icrf, star_meas_los, weights)
-    return att_quat.ensure_positive_scalar()
+    weights = np.ones(len(star_ids)) / (camera_sigma**2)
+    att_quat, P = davenport(star_los_icrf, star_meas_los, weights, camera_sigma)
+    return att_quat.ensure_positive_scalar(), P
 
-def davenport(r_is, b_is, w_is):
+def davenport(r_is, b_is, w_is, sigmas):
     B = np.zeros((3,3))
     z = np.zeros((3,1))
     for i in range(len(r_is)):
@@ -280,5 +281,22 @@ def davenport(r_is, b_is, w_is):
     eigvals, eigvecs = np.linalg.eig(K)
     max_idx = np.argmax(eigvals)
     quat_vec = eigvecs[:,max_idx] / np.linalg.norm(eigvecs[:,max_idx])
+    est_att_quat = Quaternion(*quat_vec).ensure_positive_scalar()
 
-    return Quaternion(*quat_vec).ensure_positive_scalar()
+    lambda_0 = np.sum(w_is)
+
+    B_0 = np.zeros((3, 3))
+    M = np.zeros((3, 3))
+    for i in range(len(r_is)):
+        w_i = w_is[i]
+        r_i = r_is[i]
+        sigma_i = sigmas[i]
+
+        b_true_i = est_att_quat.rotate_vector(r_i)
+        B_0 += w_i * np.outer(b_true_i, b_true_i)
+        M += w_i**2 * sigma_i**2 * (np.eye(3) - np.outer(b_true_i, b_true_i))
+    l_min_B0_inv = np.linalg.inv(lambda_0 * np.eye(3) - B_0)
+
+    P = l_min_B0_inv @ M @ l_min_B0_inv
+
+    return est_att_quat, P
