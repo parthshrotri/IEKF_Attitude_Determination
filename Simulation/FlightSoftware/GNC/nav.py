@@ -262,7 +262,8 @@ def get_attitude_from_stars(time, star_ids, star_meas_los, camera):
 
     # (Davenport's q-method) to find attitude
     weights = np.ones(len(star_ids)) / (camera_sigma**2)
-    att_quat, P = davenport(star_los_icrf, star_meas_los, weights, camera_sigma)
+    sigmas = np.ones(len(star_ids)) * camera_sigma
+    att_quat, P = davenport(star_los_icrf, star_meas_los, weights, sigmas)
     return att_quat.ensure_positive_scalar(), P
 
 def davenport(r_is, b_is, w_is, sigmas):
