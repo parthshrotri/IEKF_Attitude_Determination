@@ -76,10 +76,13 @@ class GNC:
         else:
             if self.config["LIEKF"]["init_est"] == "AUTO":
                 if measurement["type"] == "camera" and len(measurement["data"]["stars"][0]) >= 2: # Need at least 2 stars for initial attitude determination
-                    init_att_est, init_error_cov = nav.get_attitude_from_stars(measurement["time"], 
+                    init_att_est, init_error_att_cov = nav.get_attitude_from_stars(measurement["time"], 
                                                             measurement["data"]["stars"][0],
                                                             measurement["data"]["stars"][1], 
                                                             self.ref_camera)
+                    init_bias_cov = np.eye(3) * self.config["LIEKF"]["init_bias_cov"]
+                    init_error_cov = np.block([[init_error_att_cov, np.zeros((3,3))], 
+                                                [np.zeros((3,3)), init_bias_cov]])
                     self.LIEKF.initialize_filter(measurement["time"], 
                                                 init_att_est, 
                                                 init_error_cov)
@@ -103,10 +106,13 @@ class GNC:
         else:
             if self.config["MEKF"]["init_est"] == "AUTO":
                 if measurement["type"] == "camera" and len(measurement["data"]["stars"][0]) >= 2:  # Need at least 2 stars for initial attitude determination
-                    init_att_est, init_error_cov = nav.get_attitude_from_stars(measurement["time"], 
+                    init_att_est, init_error_att_cov = nav.get_attitude_from_stars(measurement["time"], 
                                                             measurement["data"]["stars"][0],
                                                             measurement["data"]["stars"][1], 
                                                             self.ref_camera)
+                    init_bias_cov = np.eye(3) * self.config["MEKF"]["init_bias_cov"]
+                    init_error_cov = np.block([[init_error_att_cov, np.zeros((3,3))], 
+                                                [np.zeros((3,3)), init_bias_cov]])
                     self.MEKF.initialize_filter(measurement["time"], 
                                                 init_att_est, 
                                                 init_error_cov)
