@@ -67,7 +67,7 @@ class Camera:
             star_los_cam = stars_los_cam[i]
 
             noise = np.random.multivariate_normal(np.zeros(3), 
-                                                  self.sigma_los * (np.eye(3) - np.outer(star_los_cam, star_los_cam)))
+                                                  self.sigma_los**2 * (np.eye(3) - np.outer(star_los_cam, star_los_cam)))
             star_los_cam_noisy = utils.normalize_vector(star_los_cam + noise)
 
             star_pix_noisy  = self.cam_K @ star_los_cam_noisy

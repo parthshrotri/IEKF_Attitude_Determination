@@ -8,7 +8,7 @@ cam_params:
   ncols: 2048
   half_fov: 10
   bore_cam: [0, 0, 1]
-  sigma_los: 1e-8 # in radians
+  sigma_los: 1e-4 # in radians
 
 catalog:
   epoch: "J2000"
