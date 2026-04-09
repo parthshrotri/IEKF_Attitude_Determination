@@ -125,19 +125,19 @@ class GNC:
 
     def get_acs_params(self):
         # Determine ACS mode and setpoints based on current target
-        if type(self.target) == str and self.target.startswith("SPICE"):
+        if type(self.target) == str and self.target.startswith("SPICE("):
             # Point towards a SPICE target
             mode                = 2
-            planet              = int(self.target[5:])
+            planet              = int(self.target[5:-1])
             vec_to_planet_icrf  = utils.get_planet_position(self.time, planet) - self.vehicle.pos_true_icrf
             dir_to_planet_icrf  = utils.normalize_vector(vec_to_planet_icrf)
             # Update target attitude
             target_icrf_to_cam  = utils.align_vectors(np.array([0, 0, 1]), dir_to_planet_icrf)
             target_rate_body    = np.zeros(3)
-        elif type(self.target) == str and self.target.startswith("HIP"):
+        elif type(self.target) == str and self.target.startswith("HIP("):
             # Point towards a star
             mode                = 2
-            star_icrf_vec       = self.star_catalog.get_stars_los_at_idx(self.time, [int(self.target[3:])]).flatten()
+            star_icrf_vec       = self.star_catalog.get_stars_los_at_idx(self.time, [int(self.target[4:-1])]).flatten()
             target_icrf_to_cam  = utils.align_vectors(np.array([0, 0, 1]), star_icrf_vec)
             target_rate_body    = np.zeros(3)
         elif type(self.target) == str and self.target.startswith("RATE("):
@@ -148,10 +148,10 @@ class GNC:
             target_rate_body    = np.array([float(rate_vals[0]), 
                                             float(rate_vals[1]), 
                                             float(rate_vals[2])])
-        elif type(self.target) == str and self.target.startswith("RA"):
+        elif type(self.target) == str and self.target.startswith("RA("):
             # Point towards a specific RA/DEC coordinate
             mode                = 2
-            ra_dec              = self.target[3:].split(",DEC")
+            ra_dec              = self.target[3:-1].split("),DEC(")
             ra                  = np.deg2rad(float(ra_dec[0]))
             dec                 = np.deg2rad(float(ra_dec[1]))
             target_vec_icrf     = np.zeros(3)

@@ -23,4 +23,4 @@ simulation:
       cmd: "Q(0,0,0,1)"  # Desired target
     - time: 60  # in seconds elapsed from start_time
       type: "GNC_ATT_CMD"
-      cmd: "SPICE3"  # Point towards Earth (SPICE target name)
+      cmd: "SPICE(3)"  # Point towards Earth (SPICE target name)
