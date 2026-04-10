@@ -3,7 +3,7 @@ input_files:
   base_spice_kernels:
     - de440.bsp
     - naif0012.tls
-  config_loc: sim_configs/bad_init_spin/
+  config_loc: sim_configs/init_filter_bad/
 
 output_files:
   dir: "outputs/bad_init_spin/"
