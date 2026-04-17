@@ -145,15 +145,18 @@ def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
         data    = run["data_arrays"]
         cov_diags = run["cov_diag_arrays"]
         
-        data = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
+        err_att_vecs = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
 
-        error_outside_cov = np.any(np.abs(data) > 3*np.sqrt(cov_diags), axis=1)
+        error_outside_cov = np.any(np.abs(err_att_vecs) > 3*np.sqrt(cov_diags), axis=1)
 
         times_error_outside_cov = times[error_outside_cov]
 
+        time_end = times[-1]
+        idx_start_rmse = np.where(times >= time_end - 60)[0][0]
+
         # TBR: If RMSE of attitude error exceeds 0.8 rad, consider it a failure regardless of covariance consistency
-        RMSE = np.sqrt(np.mean(data**2, axis=0))
-        if np.any(RMSE > 0.8):
+        RMSE = np.sqrt(np.mean(err_att_vecs[idx_start_rmse:-1]**2, axis=0))
+        if np.any(RMSE > 0.05):
             run_success[i] = False
             continue
 
@@ -189,12 +192,12 @@ def plot_monte_carlo_att_results(run_data, title, ylabels, fig_path):
         data        = run["data_arrays"]
         cov_diags   = run["cov_diag_arrays"]
 
-        data = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
+        err_att_vecs = 2*data[:,0:3]  # Convert quaternion error to small angle approximation for vector part
 
         if run_success[i]: 
-            ax[0].plot(times, data[:,0], color='k', alpha=5/num_success, zorder=1)
-            ax[1].plot(times, data[:,1], color='k', alpha=5/num_success, zorder=1)
-            ax[2].plot(times, data[:,2], color='k', alpha=5/num_success, zorder=1)
+            ax[0].plot(times, err_att_vecs[:,0], color='k', alpha=5/num_success, zorder=1)
+            ax[1].plot(times, err_att_vecs[:,1], color='k', alpha=5/num_success, zorder=1)
+            ax[2].plot(times, err_att_vecs[:,2], color='k', alpha=5/num_success, zorder=1)
             ax[0].fill_between(times, -3*np.sqrt(cov_diags[:,0]), 3*np.sqrt(cov_diags[:,0]), color=colors[0], alpha=1/num_success, zorder=0)
             ax[1].fill_between(times, -3*np.sqrt(cov_diags[:,1]), 3*np.sqrt(cov_diags[:,1]), color=colors[1], alpha=1/num_success, zorder=0)
             ax[2].fill_between(times, -3*np.sqrt(cov_diags[:,2]), 3*np.sqrt(cov_diags[:,2]), color=colors[2], alpha=1/num_success, zorder=0)
